@@ -1,0 +1,10 @@
+name: "CDU"
+output_dir: "."
+navbar:
+  title: "CDU Health Advocate Internship"
+  left:
+    - text: "Clubs and Clinics"
+      href: index.html
+output:
+  html_document:
+    theme: cosmo

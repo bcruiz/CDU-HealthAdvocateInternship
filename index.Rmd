@@ -1,0 +1,332 @@
+---
+title: "24 Hour Fitness Clubs and Mobile/Pharmacy Clinics"
+author: "Brandyn Ruiz"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+library(readr)
+library(dplyr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(ggmap)
+library(leaflet)
+library(leaflet.extras2)
+library(htmltools)
+library(plotly)
+library(kableExtra)
+library(tidyverse)
+```
+
+```{r Compton Mobile Dataset, message=FALSE, echo=FALSE, warning=FALSE}
+ComptonMobile <- read_csv("ComptonMobile.csv")
+
+```
+
+```{r echo=FALSE}
+register_google(key = 'AIzaSyDq5iF4Ivj7nBQEFIxqBy06EkA5ACRTZgU')
+```
+
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+for (i in 1:nrow(ComptonMobile)){
+
+  result <- geocode(ComptonMobile$Address[i], output = 'latlona', source = 'google')
+  
+  ComptonMobile$lon[i] <- as.numeric(result[1])
+  ComptonMobile$lat[i] <- as.numeric(result[2])
+  ComptonMobile$geoAddress[i] <- as.character(result[3])
+}
+
+write.csv(ComptonMobile, 'ComptonMobileGeo.csv')
+```
+
+```{r Compton Mobile Map, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+leaflet(ComptonMobile)%>%
+  addTiles()%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Name of Facility`))
+```
+
+```{r Compton Pharmacy, warning=FALSE, message=FALSE, echo=FALSE}
+ComptonPharmacy <- read_csv('ComptonPharmacy.csv')
+
+ComptonPharmacy <- ComptonPharmacy%>%
+  mutate(Pharmacy = str_extract(ComptonPharmacy$Name, '.*#'))%>%
+  select(Pharmacy, Name, Address, Hours, `Type of Vaccine`, `Contact Number`)
+
+ComptonPharmacy$Pharmacy <- sub(' #', '', ComptonPharmacy$Pharmacy)
+```
+
+```{r Compton Pharmacy Geo, warning=FALSE, message=FALSE, echo=FALSE}
+for (i in 1:nrow(ComptonPharmacy)){
+
+  result <- geocode(ComptonPharmacy$Address[i], output = 'latlona', source = 'google')
+  
+  ComptonPharmacy$lon[i] <- as.numeric(result[1])
+  ComptonPharmacy$lat[i] <- as.numeric(result[2])
+  ComptonPharmacy$geoAddress[i] <- as.character(result[3])
+}
+
+write.csv(ComptonPharmacy, 'ComptonPharmacyGeo.csv')
+```
+
+```{r Compton Mobile & Pharm, warning=FALSE, message=FALSE, echo=FALSE, include = FALSE}
+leaflet(ComptonMobile)%>%
+  addTiles()%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Name of Facility`))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(Name), data = ComptonPharmacy)
+```
+
+```{r Lancaster Pharmacy, message=FALSE, warning=FALSE, echo=FALSE}
+LancasterPharmacy <- read_csv('LancasterPharmacy.csv')
+
+LancasterPharmacy <- LancasterPharmacy%>%
+  mutate(Pharmacy = str_extract(LancasterPharmacy$`Organizations Name`, '.*#'))%>%
+  select(Pharmacy, `Organizations Name`, Address, Hours, `Vaccine Type`, `Phone #`)
+
+LancasterPharmacy$Pharmacy <- sub(' #', '', LancasterPharmacy$Pharmacy)
+```
+
+```{r Lancaster Pharmacy Geo, warning=FALSE, message=FALSE, echo=FALSE}
+for (i in 1:nrow(LancasterPharmacy)){
+
+  result <- geocode(LancasterPharmacy$Address[i], output = 'latlona', source = 'google')
+  
+  LancasterPharmacy$lon[i] <- as.numeric(result[1])
+  LancasterPharmacy$lat[i] <- as.numeric(result[2])
+  LancasterPharmacy$geoAddress[i] <- as.character(result[3])
+}
+
+write.csv(LancasterPharmacy, 'LancasterPharmacyGeo.csv')
+```
+
+```{r Compton Mobile & Pharm & Lan Pharm, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+leaflet(ComptonMobile)%>%
+  addTiles()%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Name of Facility`))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(Name), data = ComptonPharmacy)%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = LancasterPharmacy)
+```
+
+```{r Palmdale Pharmacy, message=FALSE, warning=FALSE, echo=FALSE}
+PalmdalePharmacy <- read_csv('PalmdalePharmacy.csv')
+
+PalmdalePharmacy <- PalmdalePharmacy%>%
+  mutate(Pharmacy = str_extract(PalmdalePharmacy$`Organizations Name`, '.*#'))%>%
+  select(Pharmacy, `Organizations Name`, Address, Hours, `Vaccine Type`, `Phone #`)
+
+PalmdalePharmacy$Pharmacy <- sub(' #', '', PalmdalePharmacy$Pharmacy)
+```
+
+```{r Palmdale Pharmacy Geo, warning=FALSE, message=FALSE, echo=FALSE}
+for (i in 1:nrow(PalmdalePharmacy)){
+
+  result <- geocode(PalmdalePharmacy$Address[i], output = 'latlona', source = 'google')
+  
+  PalmdalePharmacy$lon[i] <- as.numeric(result[1])
+  PalmdalePharmacy$lat[i] <- as.numeric(result[2])
+  PalmdalePharmacy$geoAddress[i] <- as.character(result[3])
+}
+
+write.csv(PalmdalePharmacy, 'PalmdalePharmacyGeo.csv')
+```
+
+```{r Compton Mobile & Pharm & Lan Pharm & Palm Pharm, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+leaflet(ComptonMobile)%>%
+  addTiles()%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Name of Facility`))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(Name), data = ComptonPharmacy)%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = LancasterPharmacy)%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = PalmdalePharmacy)
+
+```
+
+```{r Santa Clarita Pharmacy, message=FALSE, warning=FALSE, echo=FALSE}
+SantaClaritaPharmacy <- read_csv('SantaClaritaPharmacy.csv')
+
+SantaClaritaPharmacy <- SantaClaritaPharmacy%>%
+  mutate(Pharmacy = str_extract(SantaClaritaPharmacy$`Organizations Name`, '.*#'))%>%
+  select(Pharmacy, `Organizations Name`, Address, Hours, `Vaccine Type`, `Phone #`)
+
+SantaClaritaPharmacy$Pharmacy <- sub(' #', '', SantaClaritaPharmacy$Pharmacy)
+```
+
+```{r Santa Clarita Pharmacy Geo, warning=FALSE, message=FALSE, echo=FALSE}
+for (i in 1:nrow(SantaClaritaPharmacy)){
+
+  result <- geocode(SantaClaritaPharmacy$Address[i], output = 'latlona', source = 'google')
+  
+  SantaClaritaPharmacy$lon[i] <- as.numeric(result[1])
+  SantaClaritaPharmacy$lat[i] <- as.numeric(result[2])
+  SantaClaritaPharmacy$geoAddress[i] <- as.character(result[3])
+}
+
+write.csv(SantaClaritaPharmacy, 'SantaClaritaPharmacyGeo.csv')
+```
+
+```{r Compton Mobile & Pharm & Lan Pharm & Palm Pharm & SC Pharm, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+leaflet(ComptonMobile)%>%
+  addTiles()%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Name of Facility`))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(Name), data = ComptonPharmacy)%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = LancasterPharmacy)%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = PalmdalePharmacy)%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = SantaClaritaPharmacy)
+
+
+```
+
+<br>
+
+Spatial visualization of the `FBO` and `CBO` sites geocoded that are providing vaccinations in the Compton, Santa Clarita, Palmdale, and Lancaster locations. Hovering over the **blue** markers displays the vaccination sites name.
+
+```{r Pharm Merge, warning=FALSE, message=FALSE, echo=FALSE}
+ComptonMobile <- ComptonMobile%>%
+  rename('Organizations Name' = `Name of Facility`,
+         'Vaccine Type' = Type,
+         'Phone #' = `Contact Name`)
+
+ComptonPharmacy <- ComptonPharmacy%>%
+  rename('Organizations Name' = Name,
+         'Vaccine Type' = `Type of Vaccine`,
+         'Phone #' = `Contact Number`)
+
+#str_extract(LancasterPharmacy$geoAddress, '(?<=,\\s).*(?=,\\sca)')
+
+ComptonMobile <- ComptonMobile%>%
+  mutate(City = rep('Compton', nrow(ComptonMobile)),
+         Pharmacy = rep(NA, nrow(ComptonMobile)))%>%
+  select(Pharmacy, `Organizations Name`, Address, City, `Vaccine Type`, `Phone #`, lon, lat,
+         geoAddress)
+
+ComptonPharmacy <- ComptonPharmacy%>%
+  mutate(City = rep('Compton', nrow(ComptonPharmacy)))%>%
+  select(Pharmacy, `Organizations Name`, Address, City, `Vaccine Type`, `Phone #`, lon, lat,
+         geoAddress)
+LancasterPharmacy <- LancasterPharmacy%>%
+  mutate(City = rep('Lancaster', nrow(LancasterPharmacy)))%>%
+  select(Pharmacy, `Organizations Name`, Address, City, `Vaccine Type`, `Phone #`, lon, lat,
+         geoAddress)
+PalmdalePharmacy <- PalmdalePharmacy%>%
+  mutate(City = rep('Palmdale', nrow(PalmdalePharmacy)))%>%
+  select(Pharmacy, `Organizations Name`, Address, City, `Vaccine Type`, `Phone #`, lon, lat,
+         geoAddress)
+SantaClaritaPharmacy <- SantaClaritaPharmacy%>%
+  mutate(City = rep('Santa Clarita', nrow(SantaClaritaPharmacy)))%>%
+  select(Pharmacy, `Organizations Name`, Address, City, `Vaccine Type`, `Phone #`, lon, lat,
+         geoAddress)
+
+PharmMerge <- rbind(ComptonMobile, ComptonPharmacy, LancasterPharmacy, PalmdalePharmacy,
+                    SantaClaritaPharmacy)
+PharmMerge <- PharmMerge%>%
+  filter(!is.na(PharmMerge$Pharmacy))
+
+PharmMerge$Pharmacy <- sub('RiteAid', 'Rite Aid', PharmMerge$Pharmacy)
+
+PharmMerge$Pharmacy <- factor(PharmMerge$Pharmacy)
+```
+
+```{r Pharm Only, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# PharmIcons <- iconList(CVS = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/CVS.png", 18, 18),
+#                        Walmart = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Walmart.png", 18, 18),
+#                        `Rite Aid` = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/RiteAid.png", 18, 18),
+#                        Albertsons = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Albertsons.png", 18, 18),
+#                        Costco = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Costco.png", 18, 18),
+#                        Walgreens = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Walgreens.png", 18, 18),
+#                        Vons = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Vons.png", 18, 18),
+#                        Ralphs = makeIcon("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Ralphs.png"))
+
+Hour24 <- read_csv("C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/Compton/24HourGeocode.csv")
+
+icons <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = 'orange')
+
+leaflet(PharmMerge)%>%
+  addTiles()%>%
+  #addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), icon = ~PharmIcons[Pharmacy])
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/CVS.png",
+                         iconSize = c(80, 80)), data = PharmMerge%>%filter(Pharmacy == 'CVS'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Walmart.png",
+                         iconSize = c(100, 100)), data = PharmMerge%>%
+               filter(Pharmacy == 'Walmart'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/RiteAid.png",
+                         iconSize = c(140, 140)), data = PharmMerge%>%
+               filter(Pharmacy == 'Rite Aid'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Albertsons.png",
+                         iconSize = c(80, 80)), data = PharmMerge%>%
+               filter(Pharmacy == 'Albertsons'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Costco.png",
+                         iconSize = c(80, 80)), data = PharmMerge%>%
+               filter(Pharmacy == 'Costco'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Walgreens.png",
+                         iconSize = c(60, 60)), data = PharmMerge%>%
+               filter(Pharmacy == 'Walgreens'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Vons.png",
+                         iconSize = c(140, 140)), data = PharmMerge%>%
+               filter(Pharmacy == 'Vons'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), 
+             icon = list(iconUrl = "C:/Users/Brandyn Ruiz/OneDrive - University of Southern California/CDU/ClubsClinics/Ralphs.png",
+                         iconSize = c(80, 80)), data = PharmMerge%>%
+               filter(Pharmacy == 'Ralphs'))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = ComptonMobile%>%
+               filter(is.na(Pharmacy)))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = ComptonPharmacy%>%
+               filter(is.na(Pharmacy)))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = LancasterPharmacy%>%
+               filter(is.na(Pharmacy)))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = PalmdalePharmacy%>%
+               filter(is.na(Pharmacy)))%>%
+  addMarkers(~lon, ~lat, label = ~as.character(`Organizations Name`), data = SantaClaritaPharmacy%>%
+               filter(is.na(Pharmacy)))%>%
+  addAwesomeMarkers(~lon, ~lat, icon = icons, label=~as.character(Club), data = Hour24)%>%
+  addCircles(~lon, ~lat, radius = 804, color = 'black', fillColor = 'green', opacity = 0.5,
+             data = Hour24)%>%
+  addMeasure(position = 'bottomleft',
+             primaryLengthUnit = 'miles',
+             primaryAreaUnit = 'sqmiles',
+             activeColor = '#3D535D',
+             completedColor = '#7D4479',
+             localization = 'en')
+  
+```
+
+<br>
+
+The **blue** markers are `FBO` and `CBO` vaccination sites and the `pharmacy sites` are with their respective icons. The **Orange** markers map the locations of the 24 Hour Fitness Centers and `CBO` in the given proximity of a half-mile radius marked in the **green** circles. The distance measured on the bottom left will measure the distance in miles from two points. Select an **orange** marker to a `pharmacy site` icon or a `CBO` icon providing vaccinations.
+
+### List of 24 Hour Fitness Centers and CBOs
+```{r 24 Hour Table, warning=FALSE, message=FALSE, echo=FALSE}
+Table24 <- Hour24%>%
+  select(Club, Address)
+
+Table24%>%
+  kbl(caption = "List of Mobile Sites")%>%
+#  kable_classic(full_width = T, html_font = 'Cambria')
+  kable_styling(full_width = F, html_font = 'Cambria', bootstrap_options = c('striped', 'hover'))
+
+```
+
+<br>
+
+Here is the original listing of `24 Hour Fitness` centers and other `CBO` provided by Dr. Vargas that represent the **orange** markers.
+
+
+```{r Half-Mile Table, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+# book1 <- read_csv('Book1.csv')
+# 
+# book1%>%
+#   kbl(caption = "List of Site Within Half-Mile")%>%
+# #  kable_classic(full_width = T, html_font = 'Cambria')
+#   kable_styling(full_width = F, html_font = 'Cambria', bootstrap_options = c('striped', 'hover'))
+
+```
