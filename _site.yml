@@ -5,6 +5,8 @@ navbar:
   left:
     - text: "Clubs and Clinics"
       href: index.html
+    - text: "Vulnerable Cities"
+      href: Compton.html
 output:
   html_document:
     theme: cosmo
